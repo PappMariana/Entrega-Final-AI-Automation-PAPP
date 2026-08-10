@@ -1,0 +1,2604 @@
+{
+  "name": "Entrega final AI",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un asistente editorial experto en clasificación de manuscritos. Tu tarea es analizar el correo proporcionado y clasificarlo en un género literario.\n\nINSTRUCCIONES:\n\n1.DEBES utilizar tu herramienta de consulta de categorías para obtener los géneros permitidos actualmente en la base de datos.\n\n2.Analiza el asunto {{ $json.Subject }} y el cuerpo {{ $json.snippet }} del correo del autor.\n\n3.Compara el contenido del correo con las reglas de los géneros que obtuviste en el paso 1.\n\n4.Tu respuesta final debe ser ÚNICAMENTE un objeto JSON válido con dos claves exactas:\n\ncategoria: El género literario asignado (ej. Fantasía, Romance, Sin definir).\n\nnombre_escritor: El nombre del autor extraído del cuerpo del correo. Si el autor no menciona su nombre en el texto, extrae el nombre del remitente del asunto o usa 'No especificado'.\n\nResponde SOLO con el código JSON, sin comillas invertidas de markdown (```json) y sin explicaciones adicionales.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -400,
+        160
+      ],
+      "id": "a72da29b-fd93-40ad-88a4-fa64ea8353b5",
+      "name": "AI Agent",
+      "retryOnFail": false,
+      "notesInFlow": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {
+          "maxTokensToSample": 500
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        384
+      ],
+      "id": "773bec12-8002-4c1f-a685-a6160f621686",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "tbwkFjleWWlCVumG",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Search records in AirtableÚsala SIEMPRE para consultar la lista oficial y actualizada de géneros literarios permitidos y sus reglas de clasificación antes de evaluar un correo.",
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbla7uBdVrtFJ6XLW",
+          "mode": "list",
+          "cachedResultName": "Guia de categorización",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tbla7uBdVrtFJ6XLW"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        384
+      ],
+      "id": "e37c94d6-2394-4e5c-9969-f745ba01536b",
+      "name": "Manual de categorización.",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLBSp7pPt5PN9NM",
+          "mode": "list",
+          "cachedResultName": "Registro de recepción de manuscritos",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblLBSp7pPt5PN9NM"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nombre_escritor": "={{ JSON.parse($json.output).nombre_escritor }}",
+            "Cliente_email": "={{ $('Trigger: nuevo mail.').item.json.From }}",
+            "Body_original": "={{ $('Trigger: nuevo mail.').item.json.snippet }}",
+            "Categoría / Género": "={{ JSON.parse($json.output).categoria }}",
+            "Estado": "Procesado por AI",
+            "Thread_ID": "={{ $('Trigger: nuevo mail.').item.json.threadId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Request_ID",
+              "displayName": "Request_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Thread_ID",
+              "displayName": "Thread_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre_escritor",
+              "displayName": "Nombre_escritor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Cliente_email",
+              "displayName": "Cliente_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Body_original",
+              "displayName": "Body_original",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Resumen (Body_original)",
+              "displayName": "Resumen (Body_original)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Titular (Body_original)",
+              "displayName": "Titular (Body_original)",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Categoría / Género",
+              "displayName": "Categoría / Género",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Romance",
+                  "value": "Romance"
+                },
+                {
+                  "name": "Fantasía",
+                  "value": "Fantasía"
+                },
+                {
+                  "name": "Sin definir",
+                  "value": "Sin definir"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por AI",
+                  "value": "Procesado por AI"
+                },
+                {
+                  "name": "Aprobación Humana",
+                  "value": "Aprobación Humana"
+                },
+                {
+                  "name": "Draft creado",
+                  "value": "Draft creado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Usuario revisor",
+              "displayName": "Usuario revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Decisión del revisor",
+              "displayName": "Decisión del revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Aceptado",
+                  "value": "Aceptado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp_validación HITL",
+              "displayName": "Timestamp_validación HITL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Errores",
+              "displayName": "Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        80
+      ],
+      "id": "03c8712e-e2fc-4d11-bdde-f4109240116a",
+      "name": "Crear registro de propuestas literarias recibidas.",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblvjDvWLTlWBOx4i",
+          "mode": "list",
+          "cachedResultName": "Log de errores",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblvjDvWLTlWBOx4i"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nodo_falla": "={{ $json.error?.node?.name || \"AI Agent\" }}",
+            "Error_Message": "={{ $json.error?.message || \"Fallo desconocido en la ejecución\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "error_ID",
+              "displayName": "error_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Nodo_falla",
+              "displayName": "Nodo_falla",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Error_Message",
+              "displayName": "Error_Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Registro de recepción de manuscritos",
+              "displayName": "Registro de recepción de manuscritos",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        304
+      ],
+      "id": "c9765393-59f4-454c-8ec1-844de8a5a30c",
+      "name": "Log de errores.",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0d073f3b-c173-4618-8151-61e6c24fc722",
+              "leftValue": "=\n{{ $json.output }}\n",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -112,
+        176
+      ],
+      "id": "0cbae223-f498-4542-87ed-be26732999c6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "Workflow 1.",
+        "height": 528,
+        "width": 1040,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        32
+      ],
+      "id": "68fc0abb-3784-4eab-a565-e820d430d456",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": []
+        },
+        "maxResults": 3,
+        "filters": {
+          "q": "category:primary is:unread -from:noreply -\"auto-reply\" -\"autoreply\" -\"fuera de la oficina\" -\"out of office\"",
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -608,
+        160
+      ],
+      "id": "4be2ed40-a5a5-4281-8509-209b47e8f176",
+      "name": "Trigger: nuevo mail.",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gentnvticy93bSBb",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Workflow 2.",
+        "height": 544,
+        "width": 1136
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        624
+      ],
+      "id": "41878b07-213a-4c98-8048-500973c8757d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLBSp7pPt5PN9NM",
+          "mode": "list",
+          "cachedResultName": "Registro de recepción de manuscritos",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblLBSp7pPt5PN9NM"
+        },
+        "options": {
+          "view": {
+            "__rl": true,
+            "value": "viwCdG9al1YL92kFu",
+            "mode": "list",
+            "cachedResultName": "Procesado por AI",
+            "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblLBSp7pPt5PN9NM/viwCdG9al1YL92kFu"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        -416,
+        736
+      ],
+      "id": "d2c9502d-3574-4887-94fc-4880cbcf1731",
+      "name": "Busca registros procesados por AI",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": []
+        },
+        "authentication": "airtableOAuth2Api",
+        "baseId": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "id"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "tblLBSp7pPt5PN9NM",
+          "mode": "id"
+        },
+        "triggerField": "Timestamp_validación HITL",
+        "additionalFields": {
+          "viewId": "viwCdG9al1YL92kFu"
+        }
+      },
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        736
+      ],
+      "id": "d80a2201-5e06-44cd-abfe-47d81b8d3583",
+      "name": "Trigger nuevo evento",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.fields['Categoría / Género'] }}",
+                    "rightValue": "Fantasía",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "76f96d6f-9793-4e7a-b8f2-fb4455013e49"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Fantasía"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b73dd069-d226-439c-816c-ddad91246b90",
+                    "leftValue": "={{ $json.fields['Categoría / Género'] }}",
+                    "rightValue": "Romance",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Romance"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e4a809a9-241f-4798-b0c0-a1a004a25afd",
+                    "leftValue": "={{ $json.fields['Categoría / Género'] }}",
+                    "rightValue": "Sin definir",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Sin definir"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -192,
+        720
+      ],
+      "id": "4d62086c-056c-40b6-9a8d-29bf9ebdac16",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BP3DDCY4C",
+          "mode": "id"
+        },
+        "messageType": "block",
+        "blocksUi": "={\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"Hola, llegó un nuevo manuscrito Sin definir. Por favor, revisar.\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"Aprobar\",\n            \"emoji\": true\n          },\n          \"style\": \"primary\",\n          \"value\": \"approve_{{ $json.id }}\",\n          \"action_id\": \"approve_expense\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"Rechazar\",\n            \"emoji\": true\n          },\n          \"style\": \"danger\",\n          \"value\": \"deny_{{ $json.id }}\",\n          \"action_id\": \"deny_expense\"\n        }\n      ]\n    }\n  ]\n}",
+        "text": "Llegó un nuevo manuscrito.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        144,
+        992
+      ],
+      "id": "4ab31715-8efa-4e68-9205-0b9771c49302",
+      "name": "Notificación con botón a Mesa de Entrada.",
+      "webhookId": "b31fc99f-27d8-4baf-86ec-9790b0494a83",
+      "credentials": {
+        "slackApi": {
+          "id": "LjJmG7fgQcbynDhK",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -352,
+        1312
+      ],
+      "id": "629f2ba2-ba19-4779-8f40-4e416da0a4fe",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "Workflow 3.",
+        "height": 752,
+        "width": 2016,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        1184
+      ],
+      "id": "00c5f48c-030b-474d-a638-2e5fdd75363c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BJEHRJYD7",
+          "mode": "id"
+        },
+        "messageType": "block",
+        "blocksUi": "={\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"Hola, llegó un nuevo manuscrito de Romance. Por favor, revisar.\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"Aprobar\",\n            \"emoji\": true\n          },\n          \"style\": \"primary\",\n          \"value\": \"approve_{{ $json.id }}\",\n          \"action_id\": \"approve_expense\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"Rechazar\",\n            \"emoji\": true\n          },\n          \"style\": \"danger\",\n          \"value\": \"deny_{{ $json.id }}\",\n          \"action_id\": \"deny_expense\"\n        }\n      ]\n    }\n  ]\n}",
+        "text": "Llegó un nuevo manuscrito.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        144,
+        816
+      ],
+      "id": "d6722a97-8a00-4a3d-ad17-9cf531ca7a74",
+      "name": "Notificación con botón a Romance.",
+      "webhookId": "4aae1605-2cf2-4f22-a86f-a629ba26bc64",
+      "credentials": {
+        "slackApi": {
+          "id": "LjJmG7fgQcbynDhK",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-interactivity",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        1312
+      ],
+      "id": "5d6c19ce-e0e1-48ea-9483-2b5b78b813f7",
+      "name": "Webhook: recibe respuesta de botones en Slack.",
+      "webhookId": "b325afc0-8f19-4395-977e-25d0e0903df4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "65d7cfd5-d525-4b1f-9b9b-0087a8962678",
+              "name": "id",
+              "value": "={{ JSON.parse($json.body.payload).actions[0].value.split('_')[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "d086fdca-ad41-47c8-86f1-fa3677decfcd",
+              "name": "Estado",
+              "value": "Revisado por humano",
+              "type": "string"
+            },
+            {
+              "id": "dbf7b33b-f696-4eaa-987d-96c861ffd28a",
+              "name": "Usuario revisor",
+              "value": "={{ JSON.parse($json.body.payload).user.name }}",
+              "type": "string"
+            },
+            {
+              "id": "81700711-fded-4cda-8e3c-93e06d914340",
+              "name": "Decisión del revisor",
+              "value": "Rechazado",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        64,
+        1664
+      ],
+      "id": "2b470c0b-b260-419c-80c5-687832906c01",
+      "name": "Edit Fields Rechazado"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b704402-0e92-4421-a241-6dd0805db31c",
+              "name": "id",
+              "value": "={{ JSON.parse($json.body.payload).actions[0].value.split('_')[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "5b53942d-1ff2-46dc-bb57-1e1297c3fde4",
+              "name": "Estado",
+              "value": "Revisado por humano",
+              "type": "string"
+            },
+            {
+              "id": "a8e5d81a-6d86-46b3-8679-7cfe1457f9fb",
+              "name": "Usuario revisor",
+              "value": "={{ JSON.parse($json.body.payload).user.name }}",
+              "type": "string"
+            },
+            {
+              "id": "4fd5a10e-143e-4da0-896b-d9084a90045c",
+              "name": "Decisión del revisor",
+              "value": "Aceptado",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        80,
+        1280
+      ],
+      "id": "22918cff-d3a2-497b-8618-92d50bf876cf",
+      "name": "Edit Fields Aceptado"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=¡Gracias por contactarnos! Te traemos una linda noticia.",
+        "message": "=¡Hola {{ $('Update: revisado y aceptado.').item.json.fields['Nombre_escritor'] }}!\n\nTenemos el agrado de comunicarte que tu manuscrito ha sido aceptado por nuestro equipo editorial. En breve nos pondremos en contacto para los siguientes pasos.\n\nSaludos cordiales,\n\nBuk Nook Editorial",
+        "options": {
+          "threadId": "={{ $('Update: revisado y aceptado.').item.json.fields['Thread_ID'] }}",
+          "sendTo": "={{ $('Update: revisado y aceptado.').item.json.fields['Cliente_email'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        1216
+      ],
+      "id": "56903b28-84f1-45b4-acc7-591dc7b6fa48",
+      "name": "Crear draft de aceptación.",
+      "webhookId": "8c8692a4-96fd-49c8-aeed-5c0885f109b4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gentnvticy93bSBb",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLBSp7pPt5PN9NM",
+          "mode": "list",
+          "cachedResultName": "Registro de recepción de manuscritos",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblLBSp7pPt5PN9NM"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estado": "Draft creado",
+            "Airtable_id": "={{ $('Update: revisado y aceptado.').item.json.fields.Airtable_id }}"
+          },
+          "matchingColumns": [
+            "Airtable_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Request_ID",
+              "displayName": "Request_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Airtable_id",
+              "displayName": "Airtable_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Thread_ID",
+              "displayName": "Thread_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Nombre_escritor",
+              "displayName": "Nombre_escritor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Cliente_email",
+              "displayName": "Cliente_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Body_original",
+              "displayName": "Body_original",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Categoría / Género",
+              "displayName": "Categoría / Género",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Romance",
+                  "value": "Romance"
+                },
+                {
+                  "name": "Fantasía",
+                  "value": "Fantasía"
+                },
+                {
+                  "name": "Sin definir",
+                  "value": "Sin definir"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por AI",
+                  "value": "Procesado por AI"
+                },
+                {
+                  "name": "Revisado por Humano",
+                  "value": "Revisado por Humano"
+                },
+                {
+                  "name": "Draft creado",
+                  "value": "Draft creado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Usuario revisor",
+              "displayName": "Usuario revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Decisión del revisor",
+              "displayName": "Decisión del revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Aceptado",
+                  "value": "Aceptado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timestamp_validación HITL",
+              "displayName": "Timestamp_validación HITL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Errores",
+              "displayName": "Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        1216
+      ],
+      "id": "d7614af4-5a54-49d1-81d9-c37bb5077ea3",
+      "name": "Actualización de Estado a Draft creado.",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ JSON.parse($('Respond to Webhook').item.json.body.payload).container.channel_id }}",
+          "mode": "id"
+        },
+        "ts": "={{ JSON.parse($('Respond to Webhook').item.json.body.payload).container.message_ts }}",
+        "messageType": "block",
+        "blocksUi": "={{\n  [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": `✅ El manuscrito de *${$json.fields['Nombre_escritor']}* ha sido RECHAZADO y validado en la base de datos por ${$json.fields['Usuario revisor']}.`\n      }\n    }\n  ]\n}}",
+        "text": "=✅ El manuscrito de *{{ $json.fields['Nombre_escritor'] }}* ha sido RECHAZADO y validado en la base de datos por {{ $json.fields['Usuario revisor'] }}.",
+        "updateFields": {},
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        464,
+        1664
+      ],
+      "id": "3ba84a3f-f15c-4b54-89d4-6470cf8f0d2f",
+      "name": "Deshabilitar botones.1",
+      "webhookId": "3a67bc86-a6df-4df5-bbfe-c0c460efc636",
+      "credentials": {
+        "slackApi": {
+          "id": "LjJmG7fgQcbynDhK",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ JSON.parse($('Respond to Webhook').item.json.body.payload).container.channel_id }}",
+          "mode": "id"
+        },
+        "ts": "={{ JSON.parse($('Respond to Webhook').item.json.body.payload).container.message_ts }}",
+        "messageType": "block",
+        "blocksUi": "={{\n  [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": `✅ El manuscrito de *${$json.fields['Nombre_escritor']}* ha sido ACEPTADO y validado en la base de datos por ${$json.fields['Usuario revisor']}.`\n      }\n    }\n  ]\n}}",
+        "text": "=✅ El manuscrito de *{{ $json.fields['Nombre_escritor'] }}* ha sido ACEPTADO y validado en la base de datos por {{ $json.fields['Usuario revisor'] }}.",
+        "updateFields": {},
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        480,
+        1280
+      ],
+      "id": "c980712c-f2e3-49e8-a2e5-80446913357c",
+      "name": "Deshabilitar botones.",
+      "webhookId": "3a67bc86-a6df-4df5-bbfe-c0c460efc636",
+      "credentials": {
+        "slackApi": {
+          "id": "LjJmG7fgQcbynDhK",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLBSp7pPt5PN9NM",
+          "mode": "list",
+          "cachedResultName": "Registro de recepción de manuscritos",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblLBSp7pPt5PN9NM"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estado": "Revisado por Humano",
+            "Decisión del revisor": "Aceptado",
+            "Usuario revisor": "={{ $json['Usuario revisor'] }}",
+            "Airtable_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "Airtable_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Request_ID",
+              "displayName": "Request_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Airtable_id",
+              "displayName": "Airtable_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Thread_ID",
+              "displayName": "Thread_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Nombre_escritor",
+              "displayName": "Nombre_escritor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Cliente_email",
+              "displayName": "Cliente_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Body_original",
+              "displayName": "Body_original",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Categoría / Género",
+              "displayName": "Categoría / Género",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Romance",
+                  "value": "Romance"
+                },
+                {
+                  "name": "Fantasía",
+                  "value": "Fantasía"
+                },
+                {
+                  "name": "Sin definir",
+                  "value": "Sin definir"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por AI",
+                  "value": "Procesado por AI"
+                },
+                {
+                  "name": "Revisado por Humano",
+                  "value": "Revisado por Humano"
+                },
+                {
+                  "name": "Draft creado",
+                  "value": "Draft creado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Usuario revisor",
+              "displayName": "Usuario revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Decisión del revisor",
+              "displayName": "Decisión del revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Aceptado",
+                  "value": "Aceptado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp_validación HITL",
+              "displayName": "Timestamp_validación HITL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Errores",
+              "displayName": "Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        1280
+      ],
+      "id": "c2dace2b-db04-4b70-ad5d-796f04b650c7",
+      "name": "Update: revisado y aceptado.",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLBSp7pPt5PN9NM",
+          "mode": "list",
+          "cachedResultName": "Registro de recepción de manuscritos",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblLBSp7pPt5PN9NM"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estado": "Draft creado",
+            "Airtable_id": "={{ $('Update: revisado y rechazado.').item.json.fields.Airtable_id }}"
+          },
+          "matchingColumns": [
+            "Airtable_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Request_ID",
+              "displayName": "Request_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Airtable_id",
+              "displayName": "Airtable_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Thread_ID",
+              "displayName": "Thread_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Nombre_escritor",
+              "displayName": "Nombre_escritor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Cliente_email",
+              "displayName": "Cliente_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Body_original",
+              "displayName": "Body_original",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Categoría / Género",
+              "displayName": "Categoría / Género",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Romance",
+                  "value": "Romance"
+                },
+                {
+                  "name": "Fantasía",
+                  "value": "Fantasía"
+                },
+                {
+                  "name": "Sin definir",
+                  "value": "Sin definir"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por AI",
+                  "value": "Procesado por AI"
+                },
+                {
+                  "name": "Revisado por Humano",
+                  "value": "Revisado por Humano"
+                },
+                {
+                  "name": "Draft creado",
+                  "value": "Draft creado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Usuario revisor",
+              "displayName": "Usuario revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Decisión del revisor",
+              "displayName": "Decisión del revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Aceptado",
+                  "value": "Aceptado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timestamp_validación HITL",
+              "displayName": "Timestamp_validación HITL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Errores",
+              "displayName": "Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        1600
+      ],
+      "id": "fc223319-cba1-43d3-badc-d988add8c42f",
+      "name": "Actualización de Estado a Draft creado.1",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=¡Gracias por contactarnos!",
+        "message": "=¡Hola {{ $('Update: revisado y rechazado.').item.json.fields['Nombre_escritor'] }}! \n\nLamentamos comunicarte que en esta ocasión tu manuscrito no ha sido seleccionado por nuestro equipo editorial.\nAgradecemos mucho tu interés y te animamos a seguir escribiendo.\n\nSaludos cordiales,\n\nBuk Nook Editorial",
+        "options": {
+          "threadId": "={{ $('Update: revisado y rechazado.').item.json.fields['Thread_ID'] }}",
+          "sendTo": "={{ $('Update: revisado y rechazado.').item.json.fields['Cliente_email'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        1600
+      ],
+      "id": "a2d57b42-39c3-4a72-a6bb-fcf7a4f9d175",
+      "name": "Crear draft de rechazo.",
+      "webhookId": "8c8692a4-96fd-49c8-aeed-5c0885f109b4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gentnvticy93bSBb",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "615cae0c-937b-4721-88b9-6c3810467956",
+              "leftValue": "={{ JSON.parse($json.body.payload).actions[0].value }}",
+              "rightValue": "approve_",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        1312
+      ],
+      "id": "0b20a56f-7c55-42e8-aa17-42eff6265885",
+      "name": "If approve_"
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblLBSp7pPt5PN9NM",
+          "mode": "list",
+          "cachedResultName": "Registro de recepción de manuscritos",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblLBSp7pPt5PN9NM"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estado": "Revisado por Humano",
+            "Decisión del revisor": "Rechazado",
+            "Usuario revisor": "={{ $json['Usuario revisor'] }}",
+            "Airtable_id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "Airtable_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Request_ID",
+              "displayName": "Request_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Airtable_id",
+              "displayName": "Airtable_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Thread_ID",
+              "displayName": "Thread_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Nombre_escritor",
+              "displayName": "Nombre_escritor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Cliente_email",
+              "displayName": "Cliente_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Body_original",
+              "displayName": "Body_original",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Categoría / Género",
+              "displayName": "Categoría / Género",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Romance",
+                  "value": "Romance"
+                },
+                {
+                  "name": "Fantasía",
+                  "value": "Fantasía"
+                },
+                {
+                  "name": "Sin definir",
+                  "value": "Sin definir"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Procesado por AI",
+                  "value": "Procesado por AI"
+                },
+                {
+                  "name": "Revisado por Humano",
+                  "value": "Revisado por Humano"
+                },
+                {
+                  "name": "Draft creado",
+                  "value": "Draft creado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Usuario revisor",
+              "displayName": "Usuario revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Decisión del revisor",
+              "displayName": "Decisión del revisor",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Aceptado",
+                  "value": "Aceptado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Timestamp_validación HITL",
+              "displayName": "Timestamp_validación HITL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Errores",
+              "displayName": "Errores",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        1664
+      ],
+      "id": "4815e025-95ec-4ad7-9e13-e1d19fe34825",
+      "name": "Update: revisado y rechazado.",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblvjDvWLTlWBOx4i",
+          "mode": "list",
+          "cachedResultName": "Log de errores",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblvjDvWLTlWBOx4i"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Error_Message": "Falta el email del cliente en la base de datos.",
+            "Nodo_falla": "GMAIL - validación previa.",
+            "Registro de recepción de manuscritos": "={{ [ $('Update: revisado y aceptado.').item.json.id ] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "error_ID",
+              "displayName": "error_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Nodo_falla",
+              "displayName": "Nodo_falla",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Error_Message",
+              "displayName": "Error_Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Registro de recepción de manuscritos",
+              "displayName": "Registro de recepción de manuscritos",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        912,
+        1408
+      ],
+      "id": "3744600e-dc35-411f-9932-3d7ed8c84e6f",
+      "name": "Log de errores.1",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "airtableOAuth2Api",
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appyECsOXblf6oRnr",
+          "mode": "list",
+          "cachedResultName": "Buk Nook Database",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblvjDvWLTlWBOx4i",
+          "mode": "list",
+          "cachedResultName": "Log de errores",
+          "cachedResultUrl": "https://airtable.com/appyECsOXblf6oRnr/tblvjDvWLTlWBOx4i"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Error_Message": "Falta el email del cliente en la base de datos.",
+            "Nodo_falla": "GMAIL - validación  previa.",
+            "Registro de recepción de manuscritos": "={{ [ $('Update: revisado y rechazado.').item.json.id ] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "error_ID",
+              "displayName": "error_ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Nodo_falla",
+              "displayName": "Nodo_falla",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Error_Message",
+              "displayName": "Error_Message",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Registro de recepción de manuscritos",
+              "displayName": "Registro de recepción de manuscritos",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        1760
+      ],
+      "id": "79f42adb-72d7-49a8-b46f-cd1c3f9cf977",
+      "name": "Log de errores.2",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Medya4qRJb0MlBPi",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "04759cd3-3bc7-4a02-b194-0887034b3fc6",
+              "leftValue": "={{ $('Update: revisado y aceptado.').item.json.fields['Cliente_email'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        1280
+      ],
+      "id": "2c26b175-e446-4247-a844-b87ed29eaae0",
+      "name": "If mail is missing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d8ce71c1-f22d-4b29-b166-958f9236fe26",
+              "leftValue": "={{ $('Update: revisado y rechazado.').item.json.fields['Cliente_email'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        1664
+      ],
+      "id": "dd5b6887-0c22-4c6e-9f3c-4a6252171d48",
+      "name": "If mail is missing1"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BNJBE0BK9",
+          "mode": "id"
+        },
+        "messageType": "=block",
+        "text": "Llegó un nuevo manuscrito.",
+        "blocksUi": "={\n  \"blocks\": [\n    {\n      \"type\": \"section\",\n      \"text\": {\n        \"type\": \"mrkdwn\",\n        \"text\": \"Hola, llegó un nuevo manuscrito de Fantasía. Por favor, revisar.\"\n      }\n    },\n    {\n      \"type\": \"actions\",\n      \"elements\": [\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"Aprobar\",\n            \"emoji\": true\n          },\n          \"style\": \"primary\",\n          \"value\": \"approve_{{ $json.id }}\",\n          \"action_id\": \"approve_expense\"\n        },\n        {\n          \"type\": \"button\",\n          \"text\": {\n            \"type\": \"plain_text\",\n            \"text\": \"Rechazar\",\n            \"emoji\": true\n          },\n          \"style\": \"danger\",\n          \"value\": \"deny_{{ $json.id }}\",\n          \"action_id\": \"deny_expense\"\n        }\n      ]\n    }\n  ]\n}",
+        "attachments": [],
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        144,
+        656
+      ],
+      "id": "0a6ad8a2-de4e-487e-aa5e-45cb9f9a3658",
+      "name": "Notificación con botón a Fantasía.",
+      "webhookId": "72541b08-97d8-4b74-bbd5-e75f348becc7",
+      "credentials": {
+        "slackApi": {
+          "id": "LjJmG7fgQcbynDhK",
+          "name": "Slack account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual de categorización.": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log de errores.": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Crear registro de propuestas literarias recibidas.",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log de errores.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger: nuevo mail.": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger nuevo evento": {
+      "main": [
+        [
+          {
+            "node": "Busca registros procesados por AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca registros procesados por AI": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Notificación con botón a Fantasía.",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificación con botón a Romance.",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificación con botón a Mesa de Entrada.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "If approve_",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: recibe respuesta de botones en Slack.": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields Rechazado": {
+      "main": [
+        [
+          {
+            "node": "Update: revisado y rechazado.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields Aceptado": {
+      "main": [
+        [
+          {
+            "node": "Update: revisado y aceptado.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear draft de aceptación.": {
+      "main": [
+        [
+          {
+            "node": "Actualización de Estado a Draft creado.",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Deshabilitar botones.": {
+      "main": [
+        [
+          {
+            "node": "If mail is missing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update: revisado y aceptado.": {
+      "main": [
+        [
+          {
+            "node": "Deshabilitar botones.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deshabilitar botones.1": {
+      "main": [
+        [
+          {
+            "node": "If mail is missing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear draft de rechazo.": {
+      "main": [
+        [
+          {
+            "node": "Actualización de Estado a Draft creado.1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If approve_": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields Aceptado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields Rechazado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update: revisado y rechazado.": {
+      "main": [
+        [
+          {
+            "node": "Deshabilitar botones.1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If mail is missing": {
+      "main": [
+        [
+          {
+            "node": "Crear draft de aceptación.",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log de errores.1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If mail is missing1": {
+      "main": [
+        [
+          {
+            "node": "Crear draft de rechazo.",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log de errores.2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1360d058-b248-4aba-8118-c537520acad7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9dfa6421b88168c95e999c631360d521ed93936a64c2839bc4626cc397aac02b"
+  },
+  "nodeGroups": [],
+  "id": "GVJuALR1v5U0tAZ9",
+  "tags": []
+}
