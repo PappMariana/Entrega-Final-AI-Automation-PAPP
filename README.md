@@ -5,5 +5,7 @@ Buk Nook Editorial Database Airtable link: https://airtable.com/appyECsOXblf6oRn
 
 Dashboard Airtable links públicos deshabilitados al no tener un plan pago de Airtable. Se incorpora al pdf screenshots del Dashboard.
 
+Las correcciones del trabajo están en color ROJO.
+
 
 
