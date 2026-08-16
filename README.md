@@ -3,7 +3,7 @@
 Buk Nook Editorial Database Airtable link: https://airtable.com/appyECsOXblf6oRnr/shrpXcmGddyrUh38A
 
 
-Dashboard Airtable links públicos deshabilitados al no tener un plan pago de Airtable.
+Dashboard Airtable links públicos deshabilitados al no tener un plan pago de Airtable. Se incorpora al pdf screenshots del Dashboard.
 
 
 
