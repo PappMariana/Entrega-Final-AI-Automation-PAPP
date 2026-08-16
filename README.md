@@ -3,8 +3,7 @@
 Buk Nook Editorial Database Airtable link: https://airtable.com/appyECsOXblf6oRnr/shrpXcmGddyrUh38A
 
 
-Dashboard Airtable links: 
+Dashboard Airtable links públicos deshabilitados al no tener un plan pago de Airtable.
 
-https://airtable.com/appyECsOXblf6oRnr/shrCra4xse2JM8mFk
 
-https://airtable.com/appyECsOXblf6oRnr/shrhTTjOsplxIQvcK
+
